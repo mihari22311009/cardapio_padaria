@@ -1,0 +1,32 @@
+services:
+  app: # Serviço responsável por rodar a aplicação PHP
+    image: php:apache # Imagem oficial do PHP com Apache já configurado
+    container_name: padaria-app # Nome fixo do container
+    ports:
+      - "8080:80" # Porta 8080 do host mapeada para porta 80 do container (Apache)
+    volumes:
+      - ./app:/var/www/html # Espelha a pasta local app/ para dentro do container
+    environment: # Variáveis usadas pelo código PHP para conectar no banco
+      DB_HOST: db # Nome do serviço do banco (resolvido pela rede interna do Docker)
+      DB_USER: root
+      DB_PASSWORD: senha123
+      DB_NAME: padaria
+    networks:
+      - padaria-rede # Conecta este container à rede personalizada
+
+  db: # Serviço responsável pelo banco de dados
+    image: mysql:8.0 # Imagem oficial do MySQL
+    container_name: padaria-db # Nome fixo do container
+    environment:
+      MYSQL_ROOT_PASSWORD: senha123 # Senha do usuário root do MySQL
+      MYSQL_DATABASE: padaria # Cria o banco "padaria" automaticamente na primeira subida
+    volumes:
+      - db-data:/var/lib/mysql # Persiste os dados do banco mesmo se o container for removido
+    networks:
+      - padaria-rede # Conecta este container à mesma rede do app
+
+volumes:
+  db-data: # Declaração do volume nomeado usado pelo db
+
+networks:
+  padaria-rede: # Declaração da rede bridge personalizada
