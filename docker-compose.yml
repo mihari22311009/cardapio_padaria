@@ -1,32 +1,56 @@
 services:
-  app: # Serviço responsável por rodar a aplicação PHP
-    image: php:apache # Imagem oficial do PHP com Apache já configurado
-    container_name: padaria-app # Nome fixo do container
+  php: # Serviço responsável por rodar a aplicação PHP
+    image: php:8.3-apache # Imagem oficial do PHP com Apache já configurado
+    container_name: php # Nome fixo do container
     ports:
-      - "8080:80" # Porta 8080 do host mapeada para porta 80 do container (Apache)
+      - "8080:80" # Mapeia porta 8080 do host para porta 80 do container (Apache)
     volumes:
-      - ./app:/var/www/html # Espelha a pasta local app/ para dentro do container
+      - ./src:/var/www/html # Espelha a pasta local src/ para dentro do container
     environment: # Variáveis usadas pelo código PHP para conectar no banco
-      DB_HOST: db # Nome do serviço do banco (resolvido pela rede interna do Docker)
-      DB_USER: root
-      DB_PASSWORD: senha123
-      DB_NAME: padaria
+      DB_HOST: mysql # Nome do serviço do banco (resolvido pela rede interna do Docker)
+      DB_USER: app
+      DB_PASSWORD: app
+      DB_NAME: app
+    depends_on:
+      - mysql # Garante que o serviço mysql suba antes do php
+    command: > # Instala as extensões de banco e depois inicia o Apache
+      bash -c "docker-php-ext-install mysqli pdo pdo_mysql &&
+               apache2-foreground"
     networks:
       - padaria-rede # Conecta este container à rede personalizada
 
-  db: # Serviço responsável pelo banco de dados
-    image: mysql:8.0 # Imagem oficial do MySQL
-    container_name: padaria-db # Nome fixo do container
+  mysql: # Serviço responsável pelo banco de dados
+    image: mysql:8.4 # Imagem oficial do MySQL
+    container_name: mysql # Nome fixo do container
+    restart: unless-stopped # Reinicia o container automaticamente caso pare
     environment:
-      MYSQL_ROOT_PASSWORD: senha123 # Senha do usuário root do MySQL
-      MYSQL_DATABASE: padaria # Cria o banco "padaria" automaticamente na primeira subida
+      MYSQL_ROOT_PASSWORD: root9 # Senha do usuário root do MySQL
+      MYSQL_DATABASE: app # Cria o banco "app" automaticamente na primeira subida
+      MYSQL_USER: app # Cria um usuário adicional
+      MYSQL_PASSWORD: app # Senha do usuário adicional
+    ports:
+      - "3306:3306" # Mapeia porta padrão do MySQL para acesso externo (ex.: DBeaver)
     volumes:
-      - db-data:/var/lib/mysql # Persiste os dados do banco mesmo se o container for removido
+      - mysql_data:/var/lib/mysql # Persiste os dados do banco mesmo se o container for removido
     networks:
-      - padaria-rede # Conecta este container à mesma rede do app
+      - padaria-rede # Conecta este container à mesma rede do php
+
+  phpmyadmin: # Serviço opcional para gerenciar o banco visualmente
+    image: phpmyadmin:latest # Imagem oficial do phpMyAdmin
+    container_name: phpmyadmin # Nome fixo do container
+    restart: unless-stopped
+    ports:
+      - "8081:80" # Acesso ao phpMyAdmin via navegador
+    environment:
+      PMA_HOST: mysql # Nome do serviço do banco ao qual o phpMyAdmin vai se conectar
+      PMA_PORT: 3306
+    depends_on:
+      - mysql
+    networks:
+      - padaria-rede
 
 volumes:
-  db-data: # Declaração do volume nomeado usado pelo db
+  mysql_data: # Declaração do volume nomeado usado pelo mysql
 
 networks:
   padaria-rede: # Declaração da rede bridge personalizada
