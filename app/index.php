@@ -23,6 +23,7 @@ $resultado = $conexao->query('SELECT id, nome, descricao, preco, data_cadastro F
             <th>Descrição</th>
             <th>Preço</th>
             <th>Data de cadastro</th>
+            <th>Ações</th>
         </tr>
         <?php while($item = $resultado->fetch_assoc()): ?>
             <tr>
@@ -31,6 +32,13 @@ $resultado = $conexao->query('SELECT id, nome, descricao, preco, data_cadastro F
                 <td><?= htmlspecialchars($item['descricao']) ?></td>
                 <td>R$ <?= htmlspecialchars($item['preco']) ?></td>
                 <td><?= htmlspecialchars($item['data_cadastro']) ?></td>
+                <td>
+                    <!-- Arquivos edit.php e delete.php ficam a cargo da Pessoa 3 -->
+                    <a href="edit.php?id=<?= (int) $item['id'] ?>">Editar</a>
+                    &nbsp;|&nbsp;
+                    <a href="delete.php?id=<?= (int) $item['id'] ?>"
+                       onclick="return confirm('Excluir este item do cardápio?')">Excluir</a>
+                </td>
             </tr>
         <?php endwhile; ?>
     </table>
