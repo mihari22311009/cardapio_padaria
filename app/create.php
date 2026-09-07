@@ -34,28 +34,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Novo item - Cardápio da padaria</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Cadastrar novo item</h1>
+    <main class="cardapio">
+        <header class="cardapio__header">
+            <h1>Novo item</h1>
+            <p>Adicione um item ao cardápio</p>
+        </header>
+        <hr class="cardapio__rule">
 
-    <?php if ($erro): ?>
-        <p style="color:red;"><?= htmlspecialchars($erro) ?></p>
-    <?php endif; ?>
+        <?php if ($erro): ?>
+            <p class="erro"><?= htmlspecialchars($erro) ?></p>
+        <?php endif; ?>
 
-    <form method="POST" action="create.php">
-        <label for="nome">Nome</label><br>
-        <input type="text" id="nome" name="nome" required><br><br>
+        <form method="POST" action="create.php" class="form-cardapio">
+            <div>
+                <label for="nome">Nome</label>
+                <input type="text" id="nome" name="nome" required>
+            </div>
 
-        <label for="descricao">Descrição</label><br>
-        <textarea id="descricao" name="descricao" rows="3"></textarea><br><br>
+            <div>
+                <label for="descricao">Descrição</label>
+                <textarea id="descricao" name="descricao" rows="3"></textarea>
+            </div>
 
-        <label for="preco">Preço (R$)</label><br>
-        <input type="number" id="preco" name="preco" step="0.01" min="0" value="0.00"><br><br>
+            <div>
+                <label for="preco">Preço (R$)</label>
+                <input type="number" id="preco" name="preco" step="0.01" min="0" value="0.00">
+            </div>
 
-        <button type="submit">Salvar</button>
-    </form>
-
-    <br>
-    <a href="index.php">&larr; Voltar para a listagem</a>
+            <div class="form-cardapio__acoes">
+                <button type="submit" class="botao">Salvar</button>
+                <a href="index.php" class="botao botao--secundario">Cancelar</a>
+            </div>
+        </form>
+    </main>
 </body>
-</html>
+</html>s

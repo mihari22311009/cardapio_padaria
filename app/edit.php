@@ -53,27 +53,43 @@ if (!$item) {
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Editar Item do Cardápio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar item - Cardápio da padaria</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Editar Item do Cardápio</h1>
+    <main class="cardapio">
+        <header class="cardapio__header">
+            <h1>Editar item</h1>
+            <p>Atualize as informações do item</p>
+        </header>
+        <hr class="cardapio__rule">
 
-    <?php if ($erro): ?>
-        <p style="color:red;"><?= htmlspecialchars($erro) ?></p>
-    <?php endif; ?>
+        <?php if ($erro): ?>
+            <p class="erro"><?= htmlspecialchars($erro) ?></p>
+        <?php endif; ?>
 
-    <form method="POST" action="edit.php?id=<?= $id ?>">
-        <label>Nome:</label><br>
-        <input type="text" name="nome" value="<?= htmlspecialchars($item['nome']) ?>" required><br><br>
+        <form method="POST" action="edit.php?id=<?= (int) $id ?>" class="form-cardapio">
+            <div>
+                <label for="nome">Nome</label>
+                <input type="text" id="nome" name="nome" value="<?= htmlspecialchars($item['nome']) ?>" required>
+            </div>
 
-        <label>Descrição:</label><br>
-        <textarea name="descricao"><?= htmlspecialchars($item['descricao']) ?></textarea><br><br>
+            <div>
+                <label for="descricao">Descrição</label>
+                <textarea id="descricao" name="descricao" rows="3"><?= htmlspecialchars($item['descricao']) ?></textarea>
+            </div>
 
-        <label>Preço:</label><br>
-        <input type="number" step="0.01" name="preco" value="<?= htmlspecialchars($item['preco']) ?>"><br><br>
+            <div>
+                <label for="preco">Preço (R$)</label>
+                <input type="number" id="preco" name="preco" step="0.01" value="<?= htmlspecialchars($item['preco']) ?>">
+            </div>
 
-        <button type="submit">Salvar</button>
-        <a href="index.php">Cancelar</a>
-    </form>
+            <div class="form-cardapio__acoes">
+                <button type="submit" class="botao">Salvar</button>
+                <a href="index.php" class="botao botao--secundario">Cancelar</a>
+            </div>
+        </form>
+    </main>
 </body>
 </html>
