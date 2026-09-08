@@ -1,0 +1,236 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Work+Sans:wght@400;500;600&display=swap');
+
+:root {
+    --wood: #241811;
+    --paper: #F6EFDD;
+    --ink: #2B1D14;
+    --taupe: #8B7355;
+    --gold: #C99A3D;
+    --brick: #9C3B2E;
+    --brick-dark: #7E2E24;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 20px;
+    background: var(--wood);
+    background-image:
+        radial-gradient(circle at 20% 15%, rgba(255, 255, 255, 0.03), transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(255, 255, 255, 0.025), transparent 45%);
+    font-family: 'Work Sans', sans-serif;
+    color: var(--ink);
+}
+
+.cardapio {
+    width: 100%;
+    max-width: 640px;
+    background: var(--paper);
+    border-radius: 4px;
+    padding: 48px 44px 40px;
+    box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.55);
+}
+
+.cardapio__header {
+    text-align: center;
+    margin-bottom: 36px;
+}
+
+.cardapio__header h1 {
+    font-family: 'Fraunces', serif;
+    font-optical-sizing: auto;
+    font-weight: 600;
+    font-size: 2.4rem;
+    margin: 0;
+    letter-spacing: 0.01em;
+}
+
+.cardapio__header p {
+    margin: 8px 0 0;
+    color: var(--taupe);
+    font-size: 0.95rem;
+}
+
+.cardapio__rule {
+    border: none;
+    border-top: 1px solid rgba(43, 29, 20, 0.15);
+    margin: 0 0 28px;
+}
+
+.item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 16px 0;
+    border-bottom: 1px dashed rgba(43, 29, 20, 0.15);
+}
+
+.item:last-child {
+    border-bottom: none;
+}
+
+.item__info {
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+.item__nome {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 1.15rem;
+    margin: 0;
+}
+
+.item__descricao {
+    margin: 4px 0 0;
+    font-size: 0.9rem;
+    color: var(--taupe);
+    line-height: 1.4;
+}
+
+.item__leader {
+    flex: 1 1 auto;
+    border-bottom: 1px dotted rgba(43, 29, 20, 0.35);
+    min-width: 24px;
+    transform: translateY(-4px);
+}
+
+.item__preco {
+    flex: 0 0 auto;
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--brick);
+    white-space: nowrap;
+}
+
+.item__acoes {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 10px;
+    margin-left: 6px;
+}
+
+.item__acoes a {
+    font-size: 0.78rem;
+    color: var(--taupe);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    margin-left: 10px;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.item__acoes a:first-child {
+    margin-left: 0;
+}
+
+.item__acoes a:hover {
+    color: var(--brick);
+    border-color: var(--brick);
+}
+
+.cardapio__vazio {
+    text-align: center;
+    color: var(--taupe);
+    padding: 24px 0 32px;
+    font-size: 0.95rem;
+}
+
+.cardapio__rodape {
+    margin-top: 32px;
+    text-align: center;
+}
+
+.botao {
+    display: inline-block;
+    background: var(--brick);
+    color: var(--paper);
+    text-decoration: none;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.92rem;
+    padding: 12px 28px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.botao:hover {
+    background: var(--brick-dark);
+    transform: translateY(-1px);
+}
+
+.botao--secundario {
+    background: transparent;
+    color: var(--taupe);
+    padding: 12px 0;
+}
+
+.botao--secundario:hover {
+    background: transparent;
+    color: var(--ink);
+    transform: none;
+}
+
+/* Formulários (create.php / edit.php) */
+.form-cardapio {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.form-cardapio label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--taupe);
+    margin-bottom: 6px;
+}
+
+.form-cardapio input[type="text"],
+.form-cardapio input[type="number"],
+.form-cardapio textarea {
+    width: 100%;
+    font-family: 'Work Sans', sans-serif;
+    font-size: 1rem;
+    padding: 11px 13px;
+    border: 1px solid rgba(43, 29, 20, 0.2);
+    border-radius: 3px;
+    background: #FFFDF8;
+    color: var(--ink);
+}
+
+.form-cardapio input:focus,
+.form-cardapio textarea:focus {
+    outline: none;
+    border-color: var(--brick);
+}
+
+.form-cardapio textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-cardapio__acoes {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-top: 8px;
+}
+
+.erro {
+    background: rgba(156, 59, 46, 0.08);
+    border: 1px solid rgba(156, 59, 46, 0.3);
+    color: var(--brick-dark);
+    padding: 10px 14px;
+    border-radius: 3px;
+    font-size: 0.88rem;
+    margin: 0 0 20px;
+}
