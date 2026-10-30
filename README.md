@@ -1,128 +1,140 @@
-# cardapio_padaria
-Trabalho pra familiarização com o docker compose
+# Cardápio Padaria — Deploy automático em VM com GitHub Actions
 
-# Cardápio Padaria — CRUD de Itens do Cardápio
+Trabalho 2 de DevOps Avançado — UniALFA
 
-## Descrição
+## Integrantes
 
-Aplicação web CRUD (Create, Read, Update, Delete) desenvolvida em PHP com MySQL,
-containerizada com Docker Compose. O sistema permite gerenciar os itens do
-cardápio de uma padaria: cadastrar, listar, editar e excluir produtos como
-pães, bolos e outros itens.
+- Mihari Barbosa da Silva
+- Arthur Antunes de Oliveira
 
-**Entidade escolhida:** Itens do Cardápio (tabela `itens_cardapio`)
+## Descrição do CRUD e tecnologias
 
-Campos da entidade:
-- `id` — identificador único (chave primária, auto incremento)
-- `nome` — nome do item (ex.: "Pão Francês")
-- `descricao` — descrição do item
-- `preco` — preço do item
-- `data_cadastro` — data e hora em que o item foi cadastrado
+Aplicação web CRUD (Create, Read, Update, Delete) para gerenciar os itens do cardápio de uma padaria: cadastrar, listar, editar e excluir produtos como pães, bolos e outros itens.
 
-## Pré-requisitos
+**Entidade:** Itens do Cardápio (tabela `itens_cardapio`)
 
-- [Docker](https://www.docker.com/) instalado
-- [Docker Compose](https://docs.docker.com/compose/) instalado
-  (já vem incluso no Docker Desktop para Windows/Mac)
+| Campo | Descrição |
+|---|---|
+| `id` | Identificador único (chave primária, auto incremento) |
+| `nome` | Nome do item (ex.: "Pão Francês") |
+| `descricao` | Descrição do item |
+| `preco` | Preço do item |
+| `data_cadastro` | Data e hora do cadastro |
 
-## Como executar o projeto
+**Tecnologias:**
 
-1. **Clone o repositório:**
-   ```bash
-   git clone <link-do-repositorio>
-   cd cardapio_padaria
-   ```
+- **PHP 8.3 com Apache** (imagem `php:8.3-apache`): linguagem e servidor da aplicação.
+- **MySQL 8.4**: banco de dados, com os dados persistidos em volume (`mysql_data`).
+- **phpMyAdmin**: interface visual para conferir o banco.
+- **Docker e Docker Compose**: executam os três serviços (`php`, `mysql`, `phpmyadmin`) na rede `padaria-rede`.
+- **GitHub Actions com runner self-hosted**: fazem o deploy automático.
+- **VirtualBox com Ubuntu Server 22.04**: máquina virtual que hospeda a aplicação e o runner.
 
-2. **Suba os containers:**
-   ```bash
-   docker-compose up -d
-   ```
+A tabela é criada automaticamente pelo `app/config.php` (`CREATE TABLE IF NOT EXISTS`), sem script SQL manual. O `config.php` também tenta reconectar ao banco até 10 vezes, para o caso de o MySQL demorar a ficar pronto.
 
-3. **Criação da tabela:** a tabela `itens_cardapio` é criada **automaticamente**
-   pelo próprio código PHP. O arquivo `app/config.php` verifica, a cada
-   requisição, se a tabela já existe (`CREATE TABLE IF NOT EXISTS`) e a cria
-   caso ainda não exista — não é necessário rodar nenhum script SQL manual.
+## Como funciona o deploy automático
 
-4. **Aguarde cerca de 30 a 60 segundos** antes de acessar a aplicação pela
-   primeira vez. Como não é permitido usar healthcheck, o container `php`
-   instala as extensões `mysqli`, `pdo` e `pdo_mysql` a partir do código-fonte
-   toda vez que sobe, e esse processo leva um tempo antes do Apache iniciar
-   de fato.
+```mermaid
+flowchart TD
+    A["Push na branch main<br/>(GitHub)"] --> B["GitHub aciona o workflow Deploy"]
+    B --> C["Runner self-hosted na VM<br/>recebe o job"]
+    C --> D["Baixa o código do repositório<br/>(actions/checkout)"]
+    D --> E["docker compose up -d --build<br/>atualiza os containers"]
+    E --> F["Aplicação atualizada<br/>em http://localhost:8080"]
+```
 
-5. **Acesse a aplicação no navegador:**
-   ```
-   http://localhost:8080
-   ```
+### O que é o runner local (self-hosted)
 
-6. **(Opcional) Acesse o phpMyAdmin** para visualizar o banco de dados diretamente:
-   ```
-   http://localhost:8081
-   ```
-   - Usuário: `app`
-   - Senha: `app`
+Normalmente os workflows do GitHub Actions rodam em servidores do próprio GitHub. Um **runner self-hosted** é um programa instalado em uma máquina nossa, no caso a VM Ubuntu, que fica conectado ao repositório aguardando trabalho. Quando acontece um push, o GitHub envia o job para esse runner, e os comandos são executados **dentro da VM**, onde a aplicação está rodando. Assim o deploy acontece direto na máquina que hospeda a aplicação, sem copiar arquivos manualmente. O runner foi instalado como serviço (`svc.sh`), então continua ligado mesmo com o terminal fechado, e aparece como **Idle** em *Settings → Actions → Runners*.
 
-## Explicação do docker-compose.yml
+### Explicação do `deploy.yml`
 
-O `docker-compose.yml` orquestra três serviços:
+```yaml
+name: Deploy
 
-### Serviço `php`
-Responsável por rodar a aplicação PHP. Usa a imagem oficial `php:8.3-apache`,
-que já vem com o Apache configurado. O código da aplicação (pasta `app/`) é
-espelhado para dentro do container através de um volume, e as extensões
-`mysqli`, `pdo` e `pdo_mysql` são instaladas automaticamente na subida do
-container, antes do Apache iniciar. A porta `8080` do computador é mapeada
-para a porta `80` do container (onde o Apache escuta).
+on:
+  push:
+    branches: [main]
 
-### Serviço `mysql`
-Responsável pelo banco de dados. Usa a imagem oficial `mysql:8.4`. Os dados
-são persistidos em um volume nomeado (`mysql_data`), garantindo que as
-informações não sejam perdidas caso o container seja removido ou reiniciado.
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
 
-### Serviço `phpmyadmin`
-Serviço opcional que fornece uma interface visual para gerenciar o banco de
-dados MySQL pelo navegador, facilitando a conferência dos dados durante o
-desenvolvimento e os testes.
+      - name: Subir aplicacao
+        run: docker compose up -d --build
 
-### Variáveis de ambiente
-As credenciais de conexão com o banco (`DB_HOST`, `DB_USER`, `DB_PASSWORD`,
-`DB_NAME`) são definidas diretamente na seção `environment` do serviço `php`,
-e são lidas pelo PHP através da função `getenv()`. Isso evita a necessidade
-de um arquivo `.env`, mantendo a configuração visível e centralizada no
-próprio `docker-compose.yml`.
+      - name: Mostrar containers
+        run: docker compose ps
+```
 
-### Rede
-Todos os serviços estão conectados à rede personalizada `padaria-rede`
-(tipo bridge), o que permite que os containers se comuniquem entre si pelo
-nome do serviço (por exemplo, o PHP se conecta ao banco usando o hostname
-`mysql`, em vez de um endereço IP fixo).
+| Nº | Trecho | O que faz |
+|---|---|---|
+| 1 | `name: Deploy` | Nome do workflow exibido na aba Actions. |
+| 2 | `on: push` | Executa o workflow quando alterações são enviadas ao repositório. |
+| 3 | `branches: [main]` | Restringe a execução aos pushes na branch `main`. |
+| 4 | `jobs: deploy` | Define o job responsável pela atualização da aplicação. |
+| 5 | `runs-on: self-hosted` | Executa o job no runner instalado na VM, e não nos servidores do GitHub. |
+| 6 | `actions/checkout@v4` | Baixa o código do repositório para a pasta de trabalho do runner. |
+| 7 | `name: Subir aplicacao` | Nome da etapa exibido no log. |
+| 8 | `docker compose up -d --build` | Sobe os containers em segundo plano (`-d`) e reconstrói o que mudou (`--build`). Como a pasta `app/` é espelhada para dentro do container por volume, o código novo passa a ser servido imediatamente. |
+| 9 | `docker compose ps` | Lista os containers e seu estado, como conferência no log. |
 
-## Pontos interessantes observados pelo grupo
+## Instalações necessárias na VM
 
-1. **Retry de conexão sem healthcheck:** como o enunciado não permite o uso
-   de healthcheck, implementamos no `config.php` um mecanismo de tentativas
-   repetidas de conexão com o banco (até 10 tentativas, com 1 segundo de
-   espera entre cada uma). Isso evita que a aplicação quebre caso o
-   container do MySQL demore um pouco mais para ficar pronto do que o
-   container do PHP.
+**No computador (host):**
 
-2. **Instalação de extensões a cada subida:** optamos por instalar as
-   extensões `mysqli`, `pdo` e `pdo_mysql` diretamente no `command` do
-   serviço `php`, em vez de usar uma imagem customizada. Isso simplificou o
-   `docker-compose.yml`, mas tem como consequência um tempo de compilação
-   (cerca de 30 a 60 segundos) toda vez que os containers são recriados —
-   algo que, em um projeto real, seria otimizado com uma imagem PHP própria
-   já contendo essas extensões.
+1. **VirtualBox**.
+2. Uma VM **Ubuntu Server 22.04** com 2 GB de RAM e 2 CPUs.
+3. Em *Configurações → Rede → Adaptador 1 (NAT) → Redirecionamento de Portas*, estas regras:
 
-3. **Divisão do trabalho por branches evitou conflitos de merge:** dividimos
-   o desenvolvimento em três frentes (infraestrutura Docker, Create/Read e
-   Update/Delete), cada uma em sua própria branch e mexendo em arquivos
-   diferentes. Essa organização praticamente eliminou conflitos de merge no
-   código da aplicação — o único conflito que enfrentamos foi em uma
-   duplicação do próprio `config.php`, resolvido facilmente pela interface
-   de resolução de conflitos do GitHub.
+| Nome | Porta do hospedeiro | Porta do convidado |
+|---|---|---|
+| ssh | 2222 | 22 |
+| app | 8080 | 8080 |
+| phpmyadmin | 8081 | 8081 |
 
-## Autores
+**Dentro da VM** (acesso por `ssh vagrant@127.0.0.1 -p 2222`):
 
-- [Aline Eduarda Morais de Rezende]
-- [Arthur Antunes de Oliveira]
-- [Mihari Barbosa da Silva]
+```bash
+# Docker e Git
+sudo apt update
+sudo apt install -y docker.io git
+sudo usermod -aG docker $USER
+# sair e entrar de novo para o grupo docker valer
+
+# Docker Compose
+sudo mkdir -p /usr/local/lib/docker/cli-plugins
+sudo curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
+sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+docker compose version
+```
+
+**Runner self-hosted:**
+
+1. No repositório: *Settings → Actions → Runners → New self-hosted runner* (Linux, x64).
+2. Executar na VM os comandos de **Download** e **Configure** que o GitHub mostra.
+3. Instalar como serviço, para ficar sempre ligado:
+
+```bash
+sudo ./svc.sh install
+sudo ./svc.sh start
+sudo ./svc.sh status
+```
+
+## Como acessar a aplicação
+
+| Serviço | Endereço |
+|---|---|
+| Aplicação (CRUD) | `http://localhost:8080` |
+| phpMyAdmin | `http://localhost:8081` (usuário `app`, senha `app`) |
+
+O acesso é feito pelo computador que hospeda a VM, graças ao redirecionamento de portas do VirtualBox. Na primeira subida, aguarde de 30 a 60 segundos: o container `php` instala as extensões `mysqli`, `pdo` e `pdo_mysql` antes de o Apache iniciar.
+
+## Demonstração do deploy automático
+
+1. Alterar um conteúdo da aplicação (por exemplo, um texto em `app/`).
+2. Fazer commit na branch `main`.
+3. Em **Actions**, o workflow **Deploy** é executado sozinho no runner da VM.
+4. Ao atualizar `http://localhost:8080`, a nova versão aparece, sem deploy manual.
